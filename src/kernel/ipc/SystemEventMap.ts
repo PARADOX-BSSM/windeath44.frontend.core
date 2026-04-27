@@ -7,7 +7,9 @@
 //     }
 //   }
 
-export interface SystemEventMap {
+import type { EventMap } from './types';
+
+export interface SystemEventMap extends EventMap {
   'process:spawned': { pid: number; name: string };
   'process:killed': { pid: number };
   'process:suspended': { pid: number };

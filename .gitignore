@@ -1,2 +1,6 @@
-.claudenode_modules/
+.claude
+node_modules/
 dist/
+coverage/
+*.log
+logs/

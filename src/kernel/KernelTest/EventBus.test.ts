@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { EventBus } from '../ipc/EventBus';
+import type { EventMap } from '../ipc/types';
 
-interface TestMap {
+interface TestMap extends EventMap {
   'test:event': { value: number };
   'other:event': { msg: string };
 }
