@@ -26,10 +26,12 @@ describe('Kernel', () => {
     expect(order).toEqual([1, 2, 3]);
   });
 
-  it('boot throws if called twice', async () => {
+  it('boot is idempotent when called twice', async () => {
     const kernel = new Kernel();
-    await kernel.boot({ features: [] });
-    await expect(kernel.boot({ features: [] })).rejects.toThrow();
+    const feature = vi.fn();
+    await kernel.boot({ features: [feature] });
+    await kernel.boot({ features: [feature] });
+    expect(feature).toHaveBeenCalledOnce();
   });
 
   it('boot publishes desktop:ready after features', async () => {
@@ -74,9 +76,10 @@ describe('initKernel / getKernel', () => {
     expect(getKernel()).toBe(kernel);
   });
 
-  it('initKernel throws if called twice', () => {
-    initKernel();
-    expect(() => initKernel()).toThrow();
+  it('initKernel returns same instance when called twice', () => {
+    const first = initKernel();
+    const second = initKernel();
+    expect(second).toBe(first);
   });
 
   it('getKernel throws before initKernel', () => {
