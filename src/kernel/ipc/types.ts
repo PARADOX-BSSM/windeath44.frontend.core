@@ -1,4 +1,6 @@
-export type EventMap = Record<string, unknown>;
+export interface EventMap {
+  [channel: string]: unknown;
+}
 
 export interface IPCEvent<TPayload = unknown> {
   channel: string;

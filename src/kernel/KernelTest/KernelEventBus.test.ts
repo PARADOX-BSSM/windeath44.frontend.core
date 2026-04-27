@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { KernelEventBus } from '../ipc/KernelEventBus';
+import type { EventMap } from '../ipc/types';
 
-interface TestMap {
+interface TestMap extends EventMap {
   'ping': { n: number };
 }
 
