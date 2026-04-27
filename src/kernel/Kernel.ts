@@ -54,7 +54,7 @@ export class Kernel {
   }
 
   async boot(config: KernelConfig): Promise<void> {
-    if (this.booted) throw new Error('Kernel already booted');
+    if (this.booted) return;
     this.booted = true;
 
     for (const feature of config.features) {
@@ -73,8 +73,7 @@ export function getKernel(): Kernel {
 }
 
 export function initKernel(): Kernel {
-  if (_kernel) throw new Error('Kernel already initialized.');
-  _kernel = new Kernel();
+  _kernel ??= new Kernel();
   return _kernel;
 }
 
