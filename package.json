@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/PARADOX-BSSM/windeath44.frontend.core.git"
   },
-  "sideEffects": false,
+  "sideEffects": ["**/builtins/**"],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
