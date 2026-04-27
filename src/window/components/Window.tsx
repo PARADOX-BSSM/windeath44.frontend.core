@@ -137,11 +137,11 @@ export function Window({ window: win }: WindowProps) {
       >
         {win.icon && <img src={win.icon} alt="" style={{ width: 16, height: 16, marginRight: 6 }} />}
         <span style={{ flex: 1 }}>{win.title}</span>
-        <button aria-label="minimize" onClick={() => minimize(win.id)}>–</button>
-        <button aria-label="maximize/restore" onClick={() => win.status === 'maximized' ? restore(win.id) : maximize(win.id)}>
+        <button aria-label="minimize" onPointerDown={(e) => e.stopPropagation()} onClick={() => minimize(win.id)}>–</button>
+        <button aria-label="maximize/restore" onPointerDown={(e) => e.stopPropagation()} onClick={() => win.status === 'maximized' ? restore(win.id) : maximize(win.id)}>
           {win.status === 'maximized' ? '❐' : '□'}
         </button>
-        {win.closable && <button aria-label="close" onClick={() => close(win.id)}>✕</button>}
+        {win.closable && <button aria-label="close" onPointerDown={(e) => e.stopPropagation()} onClick={() => close(win.id)}>✕</button>}
       </div>
 
       {/* Content */}
