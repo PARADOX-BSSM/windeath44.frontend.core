@@ -12,6 +12,7 @@
 **포함**
 - `<Desktop>` — 전체 화면 렌더 표면, 윈도우들의 부모 컨테이너
 - `<WindowLayer>` — 윈도우 z-스택 렌더 영역
+- `<ScaleProvider>` / `useScale()` — HiDPI 스케일링 (devicePixelRatio 기반 + 사용자 조정)
 - `shellFeature` — shell 시스템 프로세스 부트스트랩 함수
 
 **미포함** (소비자가 직접 구현)
