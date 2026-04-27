@@ -9,83 +9,83 @@
     "url": "https://github.com/PARADOX-BSSM/windeath44.frontend.core.git"
   },
   "sideEffects": false,
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./react": {
-      "import": "./dist/react/index.js",
-      "require": "./dist/react/index.cjs",
+      "import": "./dist/react/index.mjs",
+      "require": "./dist/react/index.js",
       "types": "./dist/react/index.d.ts"
     },
     "./window": {
-      "import": "./dist/window/index.js",
-      "require": "./dist/window/index.cjs",
+      "import": "./dist/window/index.mjs",
+      "require": "./dist/window/index.js",
       "types": "./dist/window/index.d.ts"
     },
     "./shell": {
-      "import": "./dist/shell/index.js",
-      "require": "./dist/shell/index.cjs",
+      "import": "./dist/shell/index.mjs",
+      "require": "./dist/shell/index.js",
       "types": "./dist/shell/index.d.ts"
     },
     "./router": {
-      "import": "./dist/router/index.js",
-      "require": "./dist/router/index.cjs",
+      "import": "./dist/router/index.mjs",
+      "require": "./dist/router/index.js",
       "types": "./dist/router/index.d.ts"
     },
     "./vfs": {
-      "import": "./dist/vfs/index.js",
-      "require": "./dist/vfs/index.cjs",
+      "import": "./dist/vfs/index.mjs",
+      "require": "./dist/vfs/index.js",
       "types": "./dist/vfs/index.d.ts"
     },
     "./notifications": {
-      "import": "./dist/notifications/index.js",
-      "require": "./dist/notifications/index.cjs",
+      "import": "./dist/notifications/index.mjs",
+      "require": "./dist/notifications/index.js",
       "types": "./dist/notifications/index.d.ts"
     },
     "./context-menu": {
-      "import": "./dist/context-menu/index.js",
-      "require": "./dist/context-menu/index.cjs",
+      "import": "./dist/context-menu/index.mjs",
+      "require": "./dist/context-menu/index.js",
       "types": "./dist/context-menu/index.d.ts"
     },
     "./drag-drop": {
-      "import": "./dist/drag-drop/index.js",
-      "require": "./dist/drag-drop/index.cjs",
+      "import": "./dist/drag-drop/index.mjs",
+      "require": "./dist/drag-drop/index.js",
       "types": "./dist/drag-drop/index.d.ts"
     },
     "./pdui": {
-      "import": "./dist/pdui/index.js",
-      "require": "./dist/pdui/index.cjs",
+      "import": "./dist/pdui/index.mjs",
+      "require": "./dist/pdui/index.js",
       "types": "./dist/pdui/index.d.ts"
     },
     "./ssr": {
-      "import": "./dist/ssr/index.js",
-      "require": "./dist/ssr/index.cjs",
+      "import": "./dist/ssr/index.mjs",
+      "require": "./dist/ssr/index.js",
       "types": "./dist/ssr/index.d.ts"
     },
     "./theme": {
-      "import": "./dist/theme/index.js",
-      "require": "./dist/theme/index.cjs",
+      "import": "./dist/theme/index.mjs",
+      "require": "./dist/theme/index.js",
       "types": "./dist/theme/index.d.ts"
     },
     "./keyboard": {
-      "import": "./dist/keyboard/index.js",
-      "require": "./dist/keyboard/index.cjs",
+      "import": "./dist/keyboard/index.mjs",
+      "require": "./dist/keyboard/index.js",
       "types": "./dist/keyboard/index.d.ts"
     },
     "./clipboard": {
-      "import": "./dist/clipboard/index.js",
-      "require": "./dist/clipboard/index.cjs",
+      "import": "./dist/clipboard/index.mjs",
+      "require": "./dist/clipboard/index.js",
       "types": "./dist/clipboard/index.d.ts"
     },
     "./app-registry": {
-      "import": "./dist/app-registry/index.js",
-      "require": "./dist/app-registry/index.cjs",
+      "import": "./dist/app-registry/index.mjs",
+      "require": "./dist/app-registry/index.js",
       "types": "./dist/app-registry/index.d.ts"
     }
   },
