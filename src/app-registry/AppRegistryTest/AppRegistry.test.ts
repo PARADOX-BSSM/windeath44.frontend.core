@@ -11,6 +11,13 @@ const base: AppManifest = {
   launch: () => ({ pid: 1, name: 'terminal', status: 'running', kind: 'app', parentPid: 1, metadata: { spawnedAt: '', displayName: 'Terminal', version: '1.0.0', packageId: 'terminal' } }),
 };
 
+const withRoute: AppManifest = {
+  ...base,
+  name: 'files',
+  route: '/files',
+  entryProcess: 'files',
+};
+
 describe('AppRegistry', () => {
   it('register then getByName returns manifest', () => {
     const r = new AppRegistry();
@@ -51,5 +58,38 @@ describe('AppRegistry', () => {
     expect(r.listByCategory('development')).toHaveLength(2);
     expect(r.listByCategory('media')).toHaveLength(1);
     expect(r.listByCategory('system')).toHaveLength(0);
+  });
+
+  it('getByRoute returns manifest with matching route', () => {
+    const r = new AppRegistry();
+    r.register(withRoute);
+    expect(r.getByRoute('/files')).toBe(withRoute);
+  });
+
+  it('getByRoute returns undefined for non-existent route', () => {
+    const r = new AppRegistry();
+    r.register(base);
+    expect(r.getByRoute('/terminal')).toBeUndefined();
+  });
+
+  it('unregister removes route from index', () => {
+    const r = new AppRegistry();
+    r.register(withRoute);
+    r.unregister('files');
+    expect(r.getByRoute('/files')).toBeUndefined();
+  });
+
+  it('register without route does not add to routeIndex', () => {
+    const r = new AppRegistry();
+    r.register(base);
+    expect(r.getByRoute('/terminal')).toBeUndefined();
+  });
+
+  it('multiple apps with different routes', () => {
+    const r = new AppRegistry();
+    r.register(withRoute);
+    r.register({ ...withRoute, name: 'settings', route: '/settings', entryProcess: 'settings' });
+    expect(r.getByRoute('/files')).toBe(withRoute);
+    expect(r.getByRoute('/settings')?.name).toBe('settings');
   });
 });
