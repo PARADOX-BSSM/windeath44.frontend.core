@@ -1,4 +1,5 @@
 import type { WindowState, WindowPosition, WindowSize, OpenWindowOptions } from './types';
+import { AppNavStack, type NavStackEntry } from './AppNavStack';
 
 let idCounter = 0;
 function generateId(): string {
@@ -9,6 +10,9 @@ export interface WindowStoreState {
   windows: Map<string, WindowState>;
   zCounter: number;
   children: Map<string, import('react').ReactNode>;
+  navStacks: Map<string, AppNavStack>;
+  focusedId: string | null;
+  onNavigate: ((path: string) => void) | null;
 }
 
 export interface WindowStore {
@@ -21,7 +25,11 @@ export interface WindowStore {
   focus(id: string): void;
   move(id: string, position: WindowPosition): void;
   resize(id: string, size: WindowSize): void;
+  navigate(id: string, entry: NavStackEntry): void;
+  goBack(id: string): string | null;
+  goForward(id: string): string | null;
   subscribe(listener: () => void): () => void;
+  setOnNavigate(fn: (path: string) => void): void;
 }
 
 const DEFAULT_SIZE: WindowSize = { width: 480, height: 320 };
@@ -32,6 +40,9 @@ export function createWindowStore(): WindowStore {
     windows: new Map(),
     zCounter: 100,
     children: new Map(),
+    navStacks: new Map(),
+    focusedId: null,
+    onNavigate: null,
   };
   const listeners = new Set<() => void>();
 
@@ -72,6 +83,8 @@ export function createWindowStore(): WindowStore {
       };
       state.windows.set(id, win);
       state.children.set(id, options.children);
+      state.navStacks.set(id, new AppNavStack());
+      state.focusedId = id;
       notify();
       return id;
     },
@@ -79,6 +92,10 @@ export function createWindowStore(): WindowStore {
     close(id: string): void {
       state.windows.delete(id);
       state.children.delete(id);
+      state.navStacks.delete(id);
+      if (state.focusedId === id) {
+        state.focusedId = null;
+      }
       notify();
     },
 
@@ -97,6 +114,11 @@ export function createWindowStore(): WindowStore {
     focus(id: string): void {
       state.zCounter++;
       update(id, { zIndex: state.zCounter });
+      state.focusedId = id;
+      const navStack = state.navStacks.get(id);
+      if (navStack?.current && state.onNavigate) {
+        state.onNavigate(navStack.current.path);
+      }
     },
 
     move(id: string, position: WindowPosition): void {
@@ -113,9 +135,42 @@ export function createWindowStore(): WindowStore {
       });
     },
 
+    navigate(id: string, entry: NavStackEntry): void {
+      const navStack = state.navStacks.get(id);
+      if (!navStack) return;
+      navStack.push(entry);
+      if (state.focusedId === id && state.onNavigate) {
+        state.onNavigate(entry.path);
+      }
+    },
+
+    goBack(id: string): string | null {
+      const navStack = state.navStacks.get(id);
+      if (!navStack) return null;
+      const entry = navStack.back();
+      if (entry && state.focusedId === id && state.onNavigate) {
+        state.onNavigate(entry.path);
+      }
+      return entry?.path ?? null;
+    },
+
+    goForward(id: string): string | null {
+      const navStack = state.navStacks.get(id);
+      if (!navStack) return null;
+      const entry = navStack.forward();
+      if (entry && state.focusedId === id && state.onNavigate) {
+        state.onNavigate(entry.path);
+      }
+      return entry?.path ?? null;
+    },
+
     subscribe(listener: () => void): () => void {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+
+    setOnNavigate(fn: (path: string) => void): void {
+      state.onNavigate = fn;
     },
   };
 }
