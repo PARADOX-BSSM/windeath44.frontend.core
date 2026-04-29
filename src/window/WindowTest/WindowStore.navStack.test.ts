@@ -60,7 +60,7 @@ describe('WindowStore navStack', () => {
     const navigated: string[] = [];
     store.setOnNavigate((path) => navigated.push(path));
     const id1 = store.open(opts);
-    const id2 = store.open({ ...opts, pid: 2 });
+    store.open({ ...opts, pid: 2 });
     store.navigate(id1, { path: '/page1' });
     expect(navigated).toEqual([]);
   });
@@ -109,7 +109,7 @@ describe('WindowStore navStack', () => {
     const navigated: string[] = [];
     store.setOnNavigate((path) => navigated.push(path));
     const id1 = store.open(opts);
-    const id2 = store.open({ ...opts, pid: 2 });
+    store.open({ ...opts, pid: 2 });
     store.navigate(id1, { path: '/app1/page' });
     store.focus(id1);
     expect(navigated).toEqual(['/app1/page']);
@@ -121,7 +121,7 @@ describe('WindowStore navStack', () => {
     const navigated: string[] = [];
     store.setOnNavigate((path) => navigated.push(path));
     const id1 = store.open(opts);
-    const id2 = store.open({ ...opts, pid: 2 });
+    store.open({ ...opts, pid: 2 });
     navigated.length = 0;
     store.focus(id1);
     expect(navigated).toEqual([]);
@@ -132,7 +132,7 @@ describe('WindowStore navStack', () => {
     const navigated: string[] = [];
     store.setOnNavigate((path) => navigated.push(path));
     const id1 = store.open(opts);
-    const id2 = store.open({ ...opts, pid: 2 });
+    store.open({ ...opts, pid: 2 });
     store.navigate(id1, { path: '/a' });
     store.navigate(id1, { path: '/b' });
     navigated.length = 0;

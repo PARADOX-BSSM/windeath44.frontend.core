@@ -1,6 +1,7 @@
 import type { AppManifest } from '../app-registry/types';
 import { AppRegistry } from '../app-registry/AppRegistry';
-import { matchRoute, type RouteDefinition } from '../router/matchRoute';
+import { matchRoute } from '../router/matchRoute';
+import type { RouteDefinition } from '../router/types';
 
 export interface SSRAppResolverOptions {
   registry: AppRegistry;
