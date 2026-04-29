@@ -29,11 +29,18 @@ export function useWindowManager(): WindowManagerContextValue {
 }
 
 export interface WindowManagerProviderProps {
+  onNavigate?: (path: string) => void;
   children: ReactNode;
 }
 
-export function WindowManagerProvider({ children }: WindowManagerProviderProps) {
+export function WindowManagerProvider({ onNavigate, children }: WindowManagerProviderProps) {
   const store = useMemo(() => createWindowStore(), []);
+
+  useEffect(() => {
+    if (onNavigate) {
+      store.setOnNavigate(onNavigate);
+    }
+  }, [store, onNavigate]);
 
   const [windows, setWindows] = useState<WindowState[]>(() =>
     Array.from(store.getState().windows.values()),
