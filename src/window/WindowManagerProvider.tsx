@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createWindowStore } from './WindowStore';
 import type { WindowState, OpenWindowOptions, WindowPosition, WindowSize } from './types';
+import type { NavStackEntry } from './AppNavStack';
 
 export interface WindowManagerContextValue {
   windows: WindowState[];
+  focusedId: string | null;
   getChildren(id: string): ReactNode;
   open(options: OpenWindowOptions): string;
   close(id: string): void;
@@ -13,6 +15,9 @@ export interface WindowManagerContextValue {
   focus(id: string): void;
   move(id: string, position: WindowPosition): void;
   resize(id: string, size: WindowSize): void;
+  navigate(id: string, entry: NavStackEntry): void;
+  goBack(id: string): string | null;
+  goForward(id: string): string | null;
 }
 
 const WindowManagerContext = createContext<WindowManagerContextValue | null>(null);
@@ -24,25 +29,38 @@ export function useWindowManager(): WindowManagerContextValue {
 }
 
 export interface WindowManagerProviderProps {
+  onNavigate?: (path: string) => void;
   children: ReactNode;
 }
 
-export function WindowManagerProvider({ children }: WindowManagerProviderProps) {
+export function WindowManagerProvider({ onNavigate, children }: WindowManagerProviderProps) {
   const store = useMemo(() => createWindowStore(), []);
+
+  useEffect(() => {
+    if (onNavigate) {
+      store.setOnNavigate(onNavigate);
+    }
+  }, [store, onNavigate]);
 
   const [windows, setWindows] = useState<WindowState[]>(() =>
     Array.from(store.getState().windows.values()),
   );
 
+  const [focusedId, setFocusedId] = useState<string | null>(() =>
+    store.getState().focusedId,
+  );
+
   useEffect(() => {
     return store.subscribe(() => {
       setWindows(Array.from(store.getState().windows.values()));
+      setFocusedId(store.getState().focusedId);
     });
   }, [store]);
 
   const value: WindowManagerContextValue = useMemo(
     () => ({
       windows,
+      focusedId,
       getChildren: (id) => store.getState().children.get(id) ?? null,
       open: (opts) => store.open(opts),
       close: (id) => store.close(id),
@@ -52,10 +70,11 @@ export function WindowManagerProvider({ children }: WindowManagerProviderProps) 
       focus: (id) => store.focus(id),
       move: (id, pos) => store.move(id, pos),
       resize: (id, size) => store.resize(id, size),
+      navigate: (id, entry) => store.navigate(id, entry),
+      goBack: (id) => store.goBack(id),
+      goForward: (id) => store.goForward(id),
     }),
-    // windows 변경 시 value 재생성
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [windows, store],
+    [windows, focusedId, store],
   );
 
   return (

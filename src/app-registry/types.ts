@@ -15,6 +15,8 @@ export interface AppManifest {
   permissions?: string[];
   /** Kernel.spawn에 전달할 프로세스 이름 */
   entryProcess: string;
+  /** 앱의 기본 라우트 경로, e.g. "/terminal" */
+  route?: string;
   launch: (kernel: Kernel) => Process;
 }
 
