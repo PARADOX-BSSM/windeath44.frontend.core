@@ -23,4 +23,5 @@ export interface SystemEventMap extends EventMap {
   'desktop:ready': Record<string, never>;
 
   'app:message': { fromPid: number; toPid: number; payload: unknown };
+  'app:started': { appId: string; pid: number };
 }
