@@ -104,6 +104,7 @@ export function Window({ window: win }: WindowProps) {
 
   // ── Style ──────────────────────────────────────────────────────────────────
 
+  // transform:translate instead of left/top → compositor-only update, no layout reflow
   const containerStyle: CSSProperties =
     win.status === 'maximized'
       ? { position: 'fixed', inset: 0, zIndex: win.zIndex }
@@ -111,12 +112,14 @@ export function Window({ window: win }: WindowProps) {
       ? { display: 'none' }
       : {
           position: 'fixed',
-          left: win.position.x,
-          top: win.position.y,
+          left: 0,
+          top: 0,
+          transform: `translate(${win.position.x}px, ${win.position.y}px)`,
           width: win.size.width,
           height: win.size.height,
           zIndex: win.zIndex,
           boxSizing: 'border-box',
+          willChange: 'transform',
         };
 
   const children = getChildren(win.id);
