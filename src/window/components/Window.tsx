@@ -1,5 +1,6 @@
 import {
   useRef,
+  useLayoutEffect,
   useCallback,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
@@ -11,17 +12,64 @@ interface WindowProps {
   window: WindowState;
 }
 
+// ── Resize edge helpers ──────────────────────────────────────────────────────
+
+type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+const RESIZE_EDGES: ResizeEdge[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+const HANDLE = 6;
+const MIN_W = 200;
+const MIN_H = 100;
+
+function resizeHandleStyle(edge: ResizeEdge): CSSProperties {
+  const base: CSSProperties = { position: 'absolute', zIndex: 1 };
+  const cursors: Record<ResizeEdge, string> = {
+    n: 'n-resize', s: 's-resize', e: 'e-resize', w: 'w-resize',
+    ne: 'ne-resize', nw: 'nw-resize', se: 'se-resize', sw: 'sw-resize',
+  };
+  const pos: Partial<CSSProperties> = {};
+  if (edge.includes('n')) { pos.top = 0; pos.height = HANDLE; }
+  if (edge.includes('s')) { pos.bottom = 0; pos.height = HANDLE; }
+  if (edge.includes('e')) { pos.right = 0; pos.width = HANDLE; }
+  if (edge.includes('w')) { pos.left = 0; pos.width = HANDLE; }
+  if (edge === 'n' || edge === 's') { pos.left = HANDLE; pos.right = HANDLE; }
+  if (edge === 'e' || edge === 'w') { pos.top = HANDLE; pos.bottom = HANDLE; }
+  return { ...base, ...pos, cursor: cursors[edge] };
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+
 export function Window({ window: win }: WindowProps) {
   const { getChildren, close, minimize, maximize, restore, focus, move, resize } =
     useWindowManager();
 
-  const dragging = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Drag state — stored in ref so mutations never trigger re-renders
+  const dragging = useRef<{
+    startX: number; startY: number;
+    originX: number; originY: number;
+    x: number; y: number;
+  } | null>(null);
+
   const resizing = useRef<{
     edge: ResizeEdge;
     startX: number; startY: number;
     originW: number; originH: number;
     originX: number; originY: number;
+    x: number; y: number; w: number; h: number;
   } | null>(null);
+
+  // Sync React state → DOM only when idle (not during drag/resize).
+  // This keeps the window in place across re-renders without a full layout pass.
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el || dragging.current || resizing.current) return;
+    if (win.status === 'normal') {
+      el.style.transform = `translate(${win.position.x}px, ${win.position.y}px)`;
+      el.style.width = `${win.size.width}px`;
+      el.style.height = `${win.size.height}px`;
+    }
+  });
 
   // ── Drag (titlebar) ────────────────────────────────────────────────────────
 
@@ -30,10 +78,9 @@ export function Window({ window: win }: WindowProps) {
       if (win.status === 'maximized') return;
       e.currentTarget.setPointerCapture(e.pointerId);
       dragging.current = {
-        startX: e.clientX,
-        startY: e.clientY,
-        originX: win.position.x,
-        originY: win.position.y,
+        startX: e.clientX, startY: e.clientY,
+        originX: win.position.x, originY: win.position.y,
+        x: win.position.x, y: win.position.y,
       };
       focus(win.id);
     },
@@ -42,20 +89,23 @@ export function Window({ window: win }: WindowProps) {
 
   const onTitlebarPointerMove = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
-      if (!dragging.current) return;
-      const dx = e.clientX - dragging.current.startX;
-      const dy = e.clientY - dragging.current.startY;
-      move(win.id, {
-        x: Math.max(0, dragging.current.originX + dx),
-        y: Math.max(0, dragging.current.originY + dy),
-      });
+      const d = dragging.current;
+      if (!d || !containerRef.current) return;
+      // Direct DOM write — zero React involvement, instant response
+      const x = Math.max(0, d.originX + e.clientX - d.startX);
+      const y = Math.max(0, d.originY + e.clientY - d.startY);
+      d.x = x;
+      d.y = y;
+      containerRef.current.style.transform = `translate(${x}px, ${y}px)`;
     },
-    [win.id, move],
+    [],
   );
 
   const onTitlebarPointerUp = useCallback(() => {
+    const d = dragging.current;
+    if (d) move(win.id, { x: d.x, y: d.y }); // persist final position to state once
     dragging.current = null;
-  }, []);
+  }, [win.id, move]);
 
   // ── Resize ─────────────────────────────────────────────────────────────────
 
@@ -65,12 +115,11 @@ export function Window({ window: win }: WindowProps) {
       e.currentTarget.setPointerCapture(e.pointerId);
       resizing.current = {
         edge,
-        startX: e.clientX,
-        startY: e.clientY,
-        originW: win.size.width,
-        originH: win.size.height,
-        originX: win.position.x,
-        originY: win.position.y,
+        startX: e.clientX, startY: e.clientY,
+        originW: win.size.width, originH: win.size.height,
+        originX: win.position.x, originY: win.position.y,
+        x: win.position.x, y: win.position.y,
+        w: win.size.width, h: win.size.height,
       };
       focus(win.id);
     },
@@ -80,43 +129,51 @@ export function Window({ window: win }: WindowProps) {
   const onResizePointerMove = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
       const r = resizing.current;
-      if (!r) return;
+      if (!r || !containerRef.current) return;
       const dx = e.clientX - r.startX;
       const dy = e.clientY - r.startY;
-      let { originW: w, originH: h, originX: x, originY: y } = r;
+      let w = r.originW, h = r.originH, x = r.originX, y = r.originY;
 
       if (r.edge.includes('e')) w += dx;
       if (r.edge.includes('s')) h += dy;
-      if (r.edge.includes('w')) { w -= dx; x += dx; }
-      if (r.edge.includes('n')) { h -= dy; y += dy; }
+      if (r.edge.includes('w')) { w -= dx; x = Math.max(0, r.originX + dx); }
+      if (r.edge.includes('n')) { h -= dy; y = Math.max(0, r.originY + dy); }
+      w = Math.max(MIN_W, w);
+      h = Math.max(MIN_H, h);
 
-      resize(win.id, { width: w, height: h });
-      if (r.edge.includes('w') || r.edge.includes('n')) {
-        move(win.id, { x: Math.max(0, x), y: Math.max(0, y) });
-      }
+      r.x = x; r.y = y; r.w = w; r.h = h;
+      // Direct DOM write for instant feedback
+      containerRef.current.style.transform = `translate(${x}px, ${y}px)`;
+      containerRef.current.style.width = `${w}px`;
+      containerRef.current.style.height = `${h}px`;
     },
-    [win.id, move, resize],
+    [],
   );
 
   const onResizePointerUp = useCallback(() => {
+    const r = resizing.current;
+    if (r) {
+      resize(win.id, { width: r.w, height: r.h });
+      move(win.id, { x: r.x, y: r.y });
+    }
     resizing.current = null;
-  }, []);
+  }, [win.id, move, resize]);
 
   // ── Style ──────────────────────────────────────────────────────────────────
 
-  // transform:translate instead of left/top → compositor-only update, no layout reflow
   const containerStyle: CSSProperties =
     win.status === 'maximized'
       ? { position: 'fixed', inset: 0, zIndex: win.zIndex }
       : win.status === 'minimized'
       ? { display: 'none' }
       : {
+          // position only — size & transform managed by useLayoutEffect + direct DOM
           position: 'fixed',
           left: 0,
           top: 0,
-          transform: `translate(${win.position.x}px, ${win.position.y}px)`,
           width: win.size.width,
           height: win.size.height,
+          transform: `translate(${win.position.x}px, ${win.position.y}px)`,
           zIndex: win.zIndex,
           boxSizing: 'border-box',
           willChange: 'transform',
@@ -126,6 +183,7 @@ export function Window({ window: win }: WindowProps) {
 
   return (
     <div
+      ref={containerRef}
       style={containerStyle}
       onPointerDown={() => focus(win.id)}
       data-window-id={win.id}
@@ -167,30 +225,4 @@ export function Window({ window: win }: WindowProps) {
       )}
     </div>
   );
-}
-
-// ── Resize edge helpers ──────────────────────────────────────────────────────
-
-type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
-const RESIZE_EDGES: ResizeEdge[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
-const HANDLE = 6;
-
-function resizeHandleStyle(edge: ResizeEdge): CSSProperties {
-  const base: CSSProperties = { position: 'absolute', zIndex: 1 };
-  const cursors: Record<ResizeEdge, string> = {
-    n: 'n-resize', s: 's-resize', e: 'e-resize', w: 'w-resize',
-    ne: 'ne-resize', nw: 'nw-resize', se: 'se-resize', sw: 'sw-resize',
-  };
-  const pos: Partial<CSSProperties> = {};
-  if (edge.includes('n')) { pos.top = 0; pos.height = HANDLE; }
-  if (edge.includes('s')) { pos.bottom = 0; pos.height = HANDLE; }
-  if (edge.includes('e')) { pos.right = 0; pos.width = HANDLE; }
-  if (edge.includes('w')) { pos.left = 0; pos.width = HANDLE; }
-  if (edge === 'n' || edge === 's') { pos.left = HANDLE; pos.right = HANDLE; }
-  if (edge === 'e' || edge === 'w') { pos.top = HANDLE; pos.bottom = HANDLE; }
-  if (edge.length === 1) {
-    if (edge === 'n' || edge === 's') pos.height = HANDLE;
-    if (edge === 'e' || edge === 'w') pos.width = HANDLE;
-  }
-  return { ...base, ...pos, cursor: cursors[edge] };
 }
