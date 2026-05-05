@@ -198,11 +198,17 @@ export function Window({ window: win }: WindowProps) {
       >
         {win.icon && <img src={win.icon} alt="" style={{ width: 16, height: 16, marginRight: 6 }} />}
         <span style={{ flex: 1 }}>{win.title}</span>
-        <button aria-label="minimize" onPointerDown={(e) => e.stopPropagation()} onClick={() => minimize(win.id)}>–</button>
-        <button aria-label="maximize/restore" onPointerDown={(e) => e.stopPropagation()} onClick={() => win.status === 'maximized' ? restore(win.id) : maximize(win.id)}>
-          {win.status === 'maximized' ? '❐' : '□'}
+        <button className="window-btn window-btn-minimize" aria-label="minimize" onPointerDown={(e) => e.stopPropagation()} onClick={() => minimize(win.id)}>
+          <img src="/assets/system/min.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
         </button>
-        {win.closable && <button aria-label="close" onPointerDown={(e) => e.stopPropagation()} onClick={() => close(win.id)}>✕</button>}
+        <button className="window-btn window-btn-maximize" aria-label="maximize/restore" onPointerDown={(e) => e.stopPropagation()} onClick={() => win.status === 'maximized' ? restore(win.id) : maximize(win.id)}>
+          <img src="/assets/system/full.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
+        </button>
+        {win.closable && (
+          <button className="window-btn window-btn-close" aria-label="close" onPointerDown={(e) => e.stopPropagation()} onClick={() => close(win.id)}>
+            <img src="/assets/system/exit.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
+          </button>
+        )}
       </div>
 
       {/* Content */}
