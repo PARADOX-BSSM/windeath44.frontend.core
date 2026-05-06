@@ -1,5 +1,3 @@
-import type { SpawnOptions, Process } from './process/types';
-
 export type AppKind = 'app' | 'service' | 'widget';
 
 export interface AppManifest {
@@ -9,7 +7,7 @@ export interface AppManifest {
   version: string;
   kind: AppKind;
   icon?: string;
-  entry: string; // 진입점 파일 경로
+  entry?: string;
   autoStart?: boolean;
   dependencies?: string[];
   metadata?: Record<string, unknown>;
@@ -21,7 +19,7 @@ export interface AppRegistryEntry extends AppManifest {
   component?: React.ComponentType<any>;
 }
 
-class AppRegistry {
+export class AppRegistry {
   private apps = new Map<string, AppRegistryEntry>();
   private autoStartApps: string[] = [];
 
@@ -60,32 +58,6 @@ class AppRegistry {
       .filter((app): app is AppRegistryEntry => app !== undefined);
   }
 
-  // 디렉토리 기반 자동 탐색
-  async scanDirectory(path: string): Promise<AppManifest[]> {
-    const manifests: AppManifest[] = [];
-    
-    try {
-      // Vite의 import.meta.glob 또는 webpack의 require.context 사용
-      const modules = import.meta.glob(`${path}/**/index.tsx`, { eager: true });
-      
-      for (const [filePath, module] of Object.entries(modules)) {
-        const dirName = filePath.replace(path + '/', '').replace('/index.tsx', '');
-        const mod = module as any;
-        
-        if (mod.appManifest) {
-          manifests.push({
-            ...mod.appManifest,
-            entry: filePath,
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Failed to scan app directory:', err);
-    }
-    
-    return manifests;
-  }
-
   updateStatus(id: string, status: AppRegistryEntry['status'], pid?: number): void {
     const app = this.apps.get(id);
     if (app) {
@@ -97,7 +69,6 @@ class AppRegistry {
 
 export const appRegistry = new AppRegistry();
 
-// 편의 함수
 export function registerApp(manifest: AppManifest): void {
   appRegistry.register(manifest);
 }
