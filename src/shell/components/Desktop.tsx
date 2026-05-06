@@ -1,6 +1,15 @@
 import type { DesktopProps } from '../types';
 
 export function Desktop({ children, wallpaper, style }: DesktopProps) {
+  const bg: React.CSSProperties = wallpaper
+    ? { background: wallpaper }
+    : {
+        backgroundColor: '#2e2e2e',
+        backgroundImage: "url('/assets/system/background.svg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      };
+
   return (
     <div
       data-windeath44-desktop
@@ -8,13 +17,10 @@ export function Desktop({ children, wallpaper, style }: DesktopProps) {
         position: 'fixed',
         inset: 0,
         overflow: 'hidden',
-        background: wallpaper,
-        backgroundImage: wallpaper ? undefined : "url('/assets/system/background.svg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        ...bg,
         ...style,
       }}
     >
