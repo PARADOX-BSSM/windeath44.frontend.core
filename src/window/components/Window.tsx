@@ -176,7 +176,7 @@ export function Window({ window: win }: WindowProps) {
 
   const containerStyle: CSSProperties =
     win.status === 'maximized'
-      ? { position: 'absolute', inset: 0, zIndex: win.zIndex }
+      ? { position: 'fixed', inset: 0, zIndex: win.zIndex, width: '100vw', height: '100vh' }
       : win.status === 'minimized'
       ? { display: 'none' }
       : {
