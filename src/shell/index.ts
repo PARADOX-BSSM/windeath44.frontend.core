@@ -1,5 +1,6 @@
 export { Desktop } from './components/Desktop';
 export { WindowLayer } from './components/WindowLayer';
-export { ScaleProvider, useScale } from './ScaleProvider';
+export { DisplayProvider, useDisplay } from './DisplayProvider';
 export { shellFeature } from './shellFeature';
-export type { DesktopProps, WindowLayerProps, ScaleContextValue } from './types';
+export type { DesktopProps, WindowLayerProps } from './types';
+export type { DisplayContextValue } from './DisplayProvider';

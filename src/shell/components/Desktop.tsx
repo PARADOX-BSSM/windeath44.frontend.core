@@ -1,4 +1,3 @@
-import { WindowLayer } from './WindowLayer';
 import type { DesktopProps } from '../types';
 
 export function Desktop({ children, wallpaper, style }: DesktopProps) {
@@ -10,10 +9,15 @@ export function Desktop({ children, wallpaper, style }: DesktopProps) {
         inset: 0,
         overflow: 'hidden',
         background: wallpaper,
+        backgroundImage: wallpaper ? undefined : "url('/assets/system/background.svg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         ...style,
       }}
     >
-      <WindowLayer />
       {children}
     </div>
   );

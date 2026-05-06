@@ -9,32 +9,27 @@ export function useScale(): ScaleContextValue {
   return ctx;
 }
 
-function getDeviceScale(): number {
-  return typeof window !== 'undefined' ? window.devicePixelRatio : 1;
-}
-
 export interface ScaleProviderProps {
   children: ReactNode;
+  /** 초기 스케일 (기본 1.0 = 100%) */
+  initialScale?: number;
 }
 
-export function ScaleProvider({ children }: ScaleProviderProps) {
-  const [scale, setScaleState] = useState<number>(getDeviceScale);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
-    const handler = () => setScaleState(getDeviceScale());
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+export function ScaleProvider({ children, initialScale = 1 }: ScaleProviderProps) {
+  const [scale, setScaleState] = useState<number>(initialScale);
 
   const setScale = useCallback((value: number) => {
     setScaleState(value);
   }, []);
 
   const resetScale = useCallback(() => {
-    setScaleState(getDeviceScale());
+    setScaleState(1);
   }, []);
+
+  // --s CSS 변수를 자동으로 루트에 주입 — CSS에서 calc(X * var(--s, 1) * 1cqh) 로 사용
+  useEffect(() => {
+    document.documentElement.style.setProperty('--s', String(scale));
+  }, [scale]);
 
   return (
     <ScaleContext.Provider value={{ scale, setScale, resetScale }}>
