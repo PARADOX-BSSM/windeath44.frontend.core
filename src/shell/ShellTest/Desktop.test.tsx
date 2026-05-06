@@ -32,9 +32,12 @@ describe('Desktop', () => {
     expect(el.style.cursor).toBe('crosshair');
   });
 
-  it('includes WindowLayer inside', () => {
+  it('applies flex centering by default', () => {
     const { container } = render(<Desktop />);
-    expect(container.querySelector('[data-windeath44-window-layer]')).toBeTruthy();
+    const el = container.querySelector('[data-windeath44-desktop]') as HTMLElement;
+    expect(el.style.display).toBe('flex');
+    expect(el.style.alignItems).toBe('center');
+    expect(el.style.justifyContent).toBe('center');
   });
 });
 

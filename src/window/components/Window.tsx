@@ -12,8 +12,6 @@ interface WindowProps {
   window: WindowState;
 }
 
-// ── Resize edge helpers ──────────────────────────────────────────────────────
-
 type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 const RESIZE_EDGES: ResizeEdge[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 const HANDLE = 6;
@@ -36,7 +34,13 @@ function resizeHandleStyle(edge: ResizeEdge): CSSProperties {
   return { ...base, ...pos, cursor: cursors[edge] };
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
+function getDisplayScale(): { scaleX: number; scaleY: number } {
+  const el = document.querySelector('[data-windeath44-display]');
+  if (!el) return { scaleX: 1, scaleY: 1 };
+  const vw = parseFloat(getComputedStyle(el).getPropertyValue('--vw')) || 1;
+  const vh = parseFloat(getComputedStyle(el).getPropertyValue('--vh')) || 1;
+  return { scaleX: vw, scaleY: vh };
+}
 
 export function Window({ window: win }: WindowProps) {
   const { getChildren, close, minimize, maximize, restore, focus, move, resize } =
@@ -44,7 +48,6 @@ export function Window({ window: win }: WindowProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Drag state — stored in ref so mutations never trigger re-renders
   const dragging = useRef<{
     startX: number; startY: number;
     originX: number; originY: number;
@@ -59,19 +62,19 @@ export function Window({ window: win }: WindowProps) {
     x: number; y: number; w: number; h: number;
   } | null>(null);
 
-  // Sync React state → DOM only when idle (not during drag/resize).
-  // This keeps the window in place across re-renders without a full layout pass.
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el || dragging.current || resizing.current) return;
     if (win.status === 'normal') {
-      el.style.transform = `translate(${win.position.x}px, ${win.position.y}px)`;
-      el.style.width = `${win.size.width}px`;
-      el.style.height = `${win.size.height}px`;
+      el.style.transform = `translate(calc(${win.position.x} * var(--vw)), calc(${win.position.y} * var(--vh)))`;
+      el.style.width = `calc(${win.size.width} * var(--vw))`;
+      el.style.height = `calc(${win.size.height} * var(--vh))`;
+    } else {
+      el.style.transform = '';
+      el.style.width = '';
+      el.style.height = '';
     }
   });
-
-  // ── Drag (titlebar) ────────────────────────────────────────────────────────
 
   const onTitlebarPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -91,23 +94,37 @@ export function Window({ window: win }: WindowProps) {
     (e: ReactPointerEvent<HTMLDivElement>) => {
       const d = dragging.current;
       if (!d || !containerRef.current) return;
-      // Direct DOM write — zero React involvement, instant response
-      const x = Math.max(0, d.originX + e.clientX - d.startX);
-      const y = Math.max(0, d.originY + e.clientY - d.startY);
+
+      const { scaleX, scaleY } = getDisplayScale();
+
+      const display = document.querySelector('[data-windeath44-display]') as HTMLElement;
+      let maxDesignX = Infinity;
+      let maxDesignY = Infinity;
+
+      if (display) {
+        const rect = display.getBoundingClientRect();
+        maxDesignX = (rect.width - win.size.width * scaleX) / scaleX;
+        maxDesignY = (rect.height - win.size.height * scaleY) / scaleY;
+      }
+
+      const rawX = d.originX + (e.clientX - d.startX) / scaleX;
+      const rawY = d.originY + (e.clientY - d.startY) / scaleY;
+
+      const x = Math.max(0, Math.min(rawX, maxDesignX));
+      const y = Math.max(0, Math.min(rawY, maxDesignY));
+
       d.x = x;
       d.y = y;
-      containerRef.current.style.transform = `translate(${x}px, ${y}px)`;
+      containerRef.current.style.transform = `translate(calc(${x} * var(--vw)), calc(${y} * var(--vh)))`;
     },
-    [],
+    [win.size.width, win.size.height],
   );
 
   const onTitlebarPointerUp = useCallback(() => {
     const d = dragging.current;
-    if (d) move(win.id, { x: d.x, y: d.y }); // persist final position to state once
+    if (d) move(win.id, { x: d.x, y: d.y });
     dragging.current = null;
   }, [win.id, move]);
-
-  // ── Resize ─────────────────────────────────────────────────────────────────
 
   const onResizePointerDown = useCallback(
     (edge: ResizeEdge) => (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -130,8 +147,11 @@ export function Window({ window: win }: WindowProps) {
     (e: ReactPointerEvent<HTMLDivElement>) => {
       const r = resizing.current;
       if (!r || !containerRef.current) return;
-      const dx = e.clientX - r.startX;
-      const dy = e.clientY - r.startY;
+
+      const { scaleX, scaleY } = getDisplayScale();
+      const dx = (e.clientX - r.startX) / scaleX;
+      const dy = (e.clientY - r.startY) / scaleY;
+
       let w = r.originW, h = r.originH, x = r.originX, y = r.originY;
 
       if (r.edge.includes('e')) w += dx;
@@ -142,10 +162,9 @@ export function Window({ window: win }: WindowProps) {
       h = Math.max(MIN_H, h);
 
       r.x = x; r.y = y; r.w = w; r.h = h;
-      // Direct DOM write for instant feedback
-      containerRef.current.style.transform = `translate(${x}px, ${y}px)`;
-      containerRef.current.style.width = `${w}px`;
-      containerRef.current.style.height = `${h}px`;
+      containerRef.current.style.transform = `translate(calc(${x} * var(--vw)), calc(${y} * var(--vh)))`;
+      containerRef.current.style.width = `calc(${w} * var(--vw))`;
+      containerRef.current.style.height = `calc(${h} * var(--vh))`;
     },
     [],
   );
@@ -159,21 +178,15 @@ export function Window({ window: win }: WindowProps) {
     resizing.current = null;
   }, [win.id, move, resize]);
 
-  // ── Style ──────────────────────────────────────────────────────────────────
-
   const containerStyle: CSSProperties =
     win.status === 'maximized'
-      ? { position: 'fixed', inset: 0, zIndex: win.zIndex }
+      ? { position: 'absolute', left: 0, top: 0, right: 0, bottom: `calc(42 * var(--vh))`, zIndex: win.zIndex }
       : win.status === 'minimized'
       ? { display: 'none' }
       : {
-          // position only — size & transform managed by useLayoutEffect + direct DOM
-          position: 'fixed',
+          position: 'absolute',
           left: 0,
           top: 0,
-          width: win.size.width,
-          height: win.size.height,
-          transform: `translate(${win.position.x}px, ${win.position.y}px)`,
           zIndex: win.zIndex,
           boxSizing: 'border-box',
           willChange: 'transform',
@@ -185,10 +198,10 @@ export function Window({ window: win }: WindowProps) {
     <div
       ref={containerRef}
       style={containerStyle}
-      onPointerDown={() => focus(win.id)}
+      onPointerDown={(e) => { e.stopPropagation(); focus(win.id); }}
       data-window-id={win.id}
+      data-window-minimized={win.status === 'minimized' ? '' : undefined}
     >
-      {/* Titlebar */}
       <div
         data-testid={`window-chrome-${win.id}`}
         style={{ cursor: 'move', userSelect: 'none', display: 'flex', alignItems: 'center' }}
@@ -198,17 +211,21 @@ export function Window({ window: win }: WindowProps) {
       >
         {win.icon && <img src={win.icon} alt="" style={{ width: 16, height: 16, marginRight: 6 }} />}
         <span style={{ flex: 1 }}>{win.title}</span>
-        <button aria-label="minimize" onPointerDown={(e) => e.stopPropagation()} onClick={() => minimize(win.id)}>–</button>
-        <button aria-label="maximize/restore" onPointerDown={(e) => e.stopPropagation()} onClick={() => win.status === 'maximized' ? restore(win.id) : maximize(win.id)}>
-          {win.status === 'maximized' ? '❐' : '□'}
+        <button className="window-btn window-btn-minimize" aria-label="minimize" onPointerDown={(e) => e.stopPropagation()} onClick={() => minimize(win.id)}>
+          <img src="/assets/system/min.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
         </button>
-        {win.closable && <button aria-label="close" onPointerDown={(e) => e.stopPropagation()} onClick={() => close(win.id)}>✕</button>}
+        <button className="window-btn window-btn-maximize" aria-label="maximize/restore" onPointerDown={(e) => e.stopPropagation()} onClick={() => win.status === 'maximized' ? restore(win.id) : maximize(win.id)}>
+          <img src="/assets/system/full.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
+        </button>
+        {win.closable && (
+          <button className="window-btn window-btn-close" aria-label="close" onPointerDown={(e) => e.stopPropagation()} onClick={() => close(win.id)}>
+            <img src="/assets/system/exit.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
+          </button>
+        )}
       </div>
 
-      {/* Content */}
       <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
 
-      {/* Resize handles */}
       {win.resizable && win.status === 'normal' && (
         <>
           {RESIZE_EDGES.map((edge) => (

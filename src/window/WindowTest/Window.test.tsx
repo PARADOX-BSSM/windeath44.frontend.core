@@ -64,10 +64,11 @@ describe('Window component', () => {
     render(<Wrapper />);
     fireEvent.click(screen.getByTestId('open-btn'));
     fireEvent.click(screen.getByRole('button', { name: 'maximize/restore' }));
-    // After maximize the style should be position:fixed inset:0
+    // After maximize: left/top/right = 0, bottom reserved for taskbar
     const winEl = screen.getByText('Test App').closest('[data-window-id]') as HTMLElement;
-    // jsdom represents inset:0 as '0'
-    expect(winEl.style.inset === '0' || winEl.style.inset === '0px').toBe(true);
+    expect(winEl.style.left === '0px' || winEl.style.left === '0').toBe(true);
+    expect(winEl.style.top === '0px' || winEl.style.top === '0').toBe(true);
+    expect(winEl.style.right === '0px' || winEl.style.right === '0').toBe(true);
   });
 
   it('useWindowManager throws outside provider', () => {

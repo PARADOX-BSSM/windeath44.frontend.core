@@ -23,6 +23,7 @@ export interface WindowStore {
   maximize(id: string): void;
   restore(id: string): void;
   focus(id: string): void;
+  blur(): void;
   move(id: string, position: WindowPosition): void;
   resize(id: string, size: WindowSize): void;
   navigate(id: string, entry: NavStackEntry): void;
@@ -119,6 +120,11 @@ export function createWindowStore(): WindowStore {
       if (navStack?.current && state.onNavigate) {
         state.onNavigate(navStack.current.path);
       }
+    },
+
+    blur(): void {
+      state.focusedId = null;
+      notify();
     },
 
     move(id: string, position: WindowPosition): void {

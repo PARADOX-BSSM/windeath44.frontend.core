@@ -13,6 +13,7 @@ export interface WindowManagerContextValue {
   maximize(id: string): void;
   restore(id: string): void;
   focus(id: string): void;
+  blur(): void;
   move(id: string, position: WindowPosition): void;
   resize(id: string, size: WindowSize): void;
   navigate(id: string, entry: NavStackEntry): void;
@@ -68,6 +69,7 @@ export function WindowManagerProvider({ onNavigate, children }: WindowManagerPro
       maximize: (id) => store.maximize(id),
       restore: (id) => store.restore(id),
       focus: (id) => store.focus(id),
+      blur: () => store.blur(),
       move: (id, pos) => store.move(id, pos),
       resize: (id, size) => store.resize(id, size),
       navigate: (id, entry) => store.navigate(id, entry),
