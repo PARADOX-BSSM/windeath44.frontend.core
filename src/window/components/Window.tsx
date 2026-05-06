@@ -69,6 +69,10 @@ export function Window({ window: win }: WindowProps) {
       el.style.transform = `translate(calc(${win.position.x} * var(--vw)), calc(${win.position.y} * var(--vh)))`;
       el.style.width = `calc(${win.size.width} * var(--vw))`;
       el.style.height = `calc(${win.size.height} * var(--vh))`;
+    } else {
+      el.style.transform = '';
+      el.style.width = '';
+      el.style.height = '';
     }
   });
 
