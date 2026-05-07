@@ -1,6 +1,6 @@
 import type { Process, ProcessStatus, SpawnOptions } from './types';
 
-export type ProcessEventType = 'spawn' | 'kill' | 'suspend' | 'resume' | 'status-change';
+export type ProcessEventType = 'spawn' | 'kill' | 'suspend' | 'resume' | 'status-change' | 'ready';
 
 export interface ProcessEvent {
   type: ProcessEventType;
@@ -19,7 +19,7 @@ export class ProcessManager {
     const process: Process = {
       pid,
       name: options.name,
-      status: 'running',
+      status: options.initialStatus ?? 'running',
       kind: options.kind,
       parentPid: options.parentPid,
       metadata: { ...options.metadata, spawnedAt: new Date().toISOString() },
@@ -51,6 +51,20 @@ export class ProcessManager {
     if (current.status !== 'suspended') return;
     const updated = this.setStatus(pid, 'running');
     this.emit({ type: 'resume', process: updated });
+  }
+
+  markReady(pid: number): void {
+    const current = this.requireProcess(pid);
+    if (current.status !== 'loading') return;
+    const updated = this.setStatus(pid, 'running');
+    this.emit({ type: 'ready', process: updated });
+  }
+
+  findByPackageId(packageId: string): Process | undefined {
+    for (const p of this.processes.values()) {
+      if (p.metadata.packageId === packageId && p.status !== 'killed') return p;
+    }
+    return undefined;
   }
 
   list(): ReadonlyArray<Process> {

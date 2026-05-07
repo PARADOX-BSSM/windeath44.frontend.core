@@ -1,4 +1,4 @@
-export type ProcessStatus = 'running' | 'suspended' | 'killed';
+export type ProcessStatus = 'loading' | 'ready' | 'running' | 'suspended' | 'killed';
 
 export type ProcessKind =
   | 'system'   // 커널 수준, 사용자 kill 불가
@@ -27,5 +27,6 @@ export interface SpawnOptions {
   name: string;
   kind: ProcessKind;
   parentPid?: number;
+  initialStatus?: ProcessStatus;
   metadata: Omit<ProcessMetadata, 'spawnedAt'>;
 }

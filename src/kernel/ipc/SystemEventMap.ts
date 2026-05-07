@@ -14,6 +14,7 @@ export interface SystemEventMap extends EventMap {
   'process:killed': { pid: number };
   'process:suspended': { pid: number };
   'process:resumed': { pid: number };
+  'process:ready': { pid: number };
 
   'window:open': { pid: number; title: string };
   'window:close': { pid: number };

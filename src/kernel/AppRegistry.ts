@@ -10,6 +10,7 @@ export interface AppManifest {
   kind: AppKind;
   renderMode?: RenderMode;
   shellRole?: string;
+  singleton?: boolean;
   icon?: string;
   entry?: string;
   autoStart?: boolean;
