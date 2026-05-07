@@ -15,6 +15,7 @@ export interface WindowSize {
 export interface WindowState {
   id: string;
   pid: number;
+  packageId?: string;
   title: string;
   icon?: string;
   position: WindowPosition;
@@ -28,6 +29,7 @@ export interface WindowState {
 
 export interface OpenWindowOptions {
   pid: number;
+  packageId?: string;
   title: string;
   icon?: string;
   initialPosition?: Partial<WindowPosition>;

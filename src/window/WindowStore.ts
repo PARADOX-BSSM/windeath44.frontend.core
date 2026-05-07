@@ -26,6 +26,7 @@ export interface WindowStore {
   blur(): void;
   move(id: string, position: WindowPosition): void;
   resize(id: string, size: WindowSize): void;
+  findByPackageId(packageId: string): WindowState | undefined;
   navigate(id: string, entry: NavStackEntry): void;
   goBack(id: string): string | null;
   goForward(id: string): string | null;
@@ -72,6 +73,7 @@ export function createWindowStore(): WindowStore {
       const win: WindowState = {
         id,
         pid: options.pid,
+        packageId: options.packageId,
         title: options.title,
         icon: options.icon,
         position: { x: 80 + (state.zCounter % 20) * 20, y: 60 + (state.zCounter % 10) * 20, ...options.initialPosition },
@@ -125,6 +127,13 @@ export function createWindowStore(): WindowStore {
     blur(): void {
       state.focusedId = null;
       notify();
+    },
+
+    findByPackageId(packageId: string): WindowState | undefined {
+      for (const w of state.windows.values()) {
+        if (w.packageId === packageId) return w;
+      }
+      return undefined;
     },
 
     move(id: string, position: WindowPosition): void {

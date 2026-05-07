@@ -16,6 +16,7 @@ export interface WindowManagerContextValue {
   blur(): void;
   move(id: string, position: WindowPosition): void;
   resize(id: string, size: WindowSize): void;
+  findByPackageId(packageId: string): WindowState | undefined;
   navigate(id: string, entry: NavStackEntry): void;
   goBack(id: string): string | null;
   goForward(id: string): string | null;
@@ -72,6 +73,7 @@ export function WindowManagerProvider({ onNavigate, children }: WindowManagerPro
       blur: () => store.blur(),
       move: (id, pos) => store.move(id, pos),
       resize: (id, size) => store.resize(id, size),
+      findByPackageId: (packageId) => store.findByPackageId(packageId),
       navigate: (id, entry) => store.navigate(id, entry),
       goBack: (id) => store.goBack(id),
       goForward: (id) => store.goForward(id),
