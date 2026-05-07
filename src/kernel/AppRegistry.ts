@@ -1,11 +1,15 @@
 export type AppKind = 'app' | 'service' | 'widget';
 
+export type RenderMode = 'shell' | 'window' | 'hidden';
+
 export interface AppManifest {
   id: string;
   name: string;
   displayName: string;
   version: string;
   kind: AppKind;
+  renderMode?: RenderMode;
+  shellRole?: string;
   icon?: string;
   entry?: string;
   autoStart?: boolean;
