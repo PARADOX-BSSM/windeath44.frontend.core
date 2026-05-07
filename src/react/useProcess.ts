@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Process } from '../kernel/process/types';
 import { useKernel } from './KernelProvider';
 
@@ -17,4 +17,11 @@ export function useProcess(pid: number): Process | undefined {
   }, [kernel, pid]);
 
   return process;
+}
+
+export function useMarkReady() {
+  const kernel = useKernel();
+  return useCallback((pid: number) => {
+    kernel.markReady(pid);
+  }, [kernel]);
 }

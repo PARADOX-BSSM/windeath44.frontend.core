@@ -38,6 +38,9 @@ export class Kernel {
         case 'resume':
           this.bus.publish('process:resumed', 0, { pid });
           break;
+        case 'ready':
+          this.bus.publish('process:ready', 0, { pid });
+          break;
       }
     });
 
@@ -55,6 +58,14 @@ export class Kernel {
 
   spawn(options: SpawnOptions): Process {
     return this.processManager.spawn(options);
+  }
+
+  markReady(pid: number): void {
+    this.processManager.markReady(pid);
+  }
+
+  findProcessByPackageId(packageId: string): Process | undefined {
+    return this.processManager.findByPackageId(packageId);
   }
 
   registerApp(manifest: AppManifest): void {
