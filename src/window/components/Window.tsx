@@ -10,6 +10,7 @@ import { useWindowManager } from '../WindowManagerProvider';
 
 interface WindowProps {
   window: WindowState;
+  loading?: boolean;
 }
 
 type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
@@ -42,7 +43,7 @@ function getDisplayScale(): { scaleX: number; scaleY: number } {
   return { scaleX: vw, scaleY: vh };
 }
 
-export function Window({ window: win }: WindowProps) {
+export function Window({ window: win, loading }: WindowProps) {
   const { getChildren, close, minimize, maximize, restore, focus, move, resize } =
     useWindowManager();
 
@@ -179,7 +180,9 @@ export function Window({ window: win }: WindowProps) {
   }, [win.id, move, resize]);
 
   const containerStyle: CSSProperties =
-    win.status === 'maximized'
+    loading
+      ? { position: 'absolute', left: 0, top: 0, zIndex: win.zIndex, boxSizing: 'border-box', willChange: 'transform', visibility: 'hidden', pointerEvents: 'none' }
+      : win.status === 'maximized'
       ? { position: 'absolute', left: 0, top: 0, right: 0, bottom: `calc(42 * var(--vh))`, zIndex: win.zIndex }
       : win.status === 'minimized'
       ? { display: 'none' }
