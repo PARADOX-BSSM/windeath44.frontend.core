@@ -1,6 +1,14 @@
+import { createContext, useContext } from 'react';
 import '../registry/builtins/index.tsx';
 import { defaultRegistry, type ComponentRegistry } from '../registry/ComponentRegistry';
 import type { HandlerRegistry, PduiDocument, PduiNode, RendererRegistry } from '../schema/types';
+
+export const PduiDataContext = createContext<Record<string, unknown> | null>(null);
+
+export function usePduiData(): Record<string, unknown> {
+  const data = useContext(PduiDataContext);
+  return data ?? {};
+}
 
 interface RenderNodeProps {
   node: PduiNode;
@@ -31,7 +39,6 @@ function RenderNode({ node, handlers, renderers, registry }: RenderNodeProps) {
   ));
 
   if (!Component) {
-    // fallback: render unknown-type marker in non-prod environments
     return (
       <div data-pdui-unknown-type={node.type}>
         {children}
@@ -51,10 +58,11 @@ export interface PduiRendererProps {
   handlers?: HandlerRegistry;
   renderers?: RendererRegistry;
   registry?: ComponentRegistry;
+  data?: Record<string, unknown>;
 }
 
-export function PduiRenderer({ document, handlers, renderers, registry = defaultRegistry }: PduiRendererProps) {
-  return (
+export function PduiRenderer({ document, handlers, renderers, registry = defaultRegistry, data }: PduiRendererProps) {
+  const content = (
     <RenderNode
       node={document.root}
       handlers={handlers}
@@ -62,4 +70,9 @@ export function PduiRenderer({ document, handlers, renderers, registry = default
       registry={registry}
     />
   );
+
+  if (data) {
+    return <PduiDataContext.Provider value={data}>{content}</PduiDataContext.Provider>;
+  }
+  return content;
 }

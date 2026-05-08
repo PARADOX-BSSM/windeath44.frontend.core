@@ -7,7 +7,6 @@ import {
 } from 'react';
 import type { WindowState } from '../types';
 import { useWindowManager } from '../WindowManagerProvider';
-import { useKernel } from '../../react';
 
 interface WindowProps {
   window: WindowState;
@@ -46,10 +45,6 @@ function getDisplayScale(): { scaleX: number; scaleY: number } {
 export function Window({ window: win }: WindowProps) {
   const { getChildren, close, minimize, maximize, restore, focus, move, resize } =
     useWindowManager();
-  const kernel = useKernel();
-
-  const proc = kernel.processManager.get(win.pid);
-  if (!proc || proc.status === 'loading' || proc.status === 'killed') return null;
 
   const containerRef = useRef<HTMLDivElement>(null);
 
