@@ -5,6 +5,8 @@ export interface PduiMeta {
   author?: string;
   description?: string;
   created?: string;
+  /** 스크립트 모듈 경로 (예: './LoginScript') — PduiRenderer가 자동 로드 */
+  script?: string;
 }
 
 export interface PduiNode {

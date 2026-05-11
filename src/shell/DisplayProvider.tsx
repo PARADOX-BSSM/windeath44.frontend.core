@@ -9,25 +9,16 @@ import {
 } from 'react';
 
 export interface DisplayContextValue {
-  /** 디스플레이의 가로세로비 (예: 4/3) */
   aspectRatio: number;
-  /** 디자인 공간의 기준 너비 (px) */
   designWidth: number;
-  /** 디자인 공간의 기준 높이 (px) */
   designHeight: number;
-  /** 현재 실제 디스플레이 너비 (px) */
   displayWidth: number;
-  /** 현재 실제 디스플레이 높이 (px) */
   displayHeight: number;
-  /** 1 디자인-픽셀이 실제 몇 px인지 (스케일 팩터) */
   scale: number;
-  /** 디자인 공간 → 실제 화상 px 변환: designPx × unitX = screen px */
   unitX: number;
-  /** 디자인 공간 → 실제 화상 px 변환: designPx × unitY = screen px */
   unitY: number;
-  /** 비율 오버라이드 */
+  pixelRatio: number;
   setAspectRatio(ratio: number): void;
-  /** 비율을 기본값으로 리셋 */
   resetAspectRatio(): void;
 }
 
@@ -41,21 +32,16 @@ export function useDisplay(): DisplayContextValue {
 
 export interface DisplayProviderProps {
   children: ReactNode;
-  /** 가로세로비 (기본 4/3) */
   aspectRatio?: number;
-  /** 디자인 기준 해상도 (기본 1280x960 = 표준 4:3) */
-  designWidth?: number;
-  designHeight?: number;
 }
 
 export function DisplayProvider({
   children,
   aspectRatio: initialRatio = 4 / 3,
-  designWidth = 1280,
-  designHeight = 960,
 }: DisplayProviderProps) {
   const [ratio, setRatio] = useState(initialRatio);
-  const [dims, setDims] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const [dims, setDims] = useState({ w: 0, h: 0 });
+  const [pixelRatio, setPixelRatio] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -66,24 +52,41 @@ export function DisplayProvider({
       const rect = el.getBoundingClientRect();
       const dw = rect.width;
       const dh = rect.height;
-      const scaleX = dw / designWidth;
-      const scaleY = dh / designHeight;
+      const dpr = window.devicePixelRatio || 1;
 
-      el.style.setProperty('--vw', `${scaleX}px`);
-      el.style.setProperty('--vh', `${scaleY}px`);
+      el.style.setProperty('--vw', '1px');
+      el.style.setProperty('--vh', '1px');
 
       setDims({ w: dw, h: dh });
+      setPixelRatio(dpr);
     };
 
     apply();
+
     const ro = new ResizeObserver(apply);
     ro.observe(el);
-    return () => ro.disconnect();
-  }, [ratio, designWidth, designHeight]);
 
-  const scale = dims.w / designWidth;
-  const unitX = dims.w / designWidth;
-  const unitY = dims.h / designHeight;
+    let currentDpr = window.devicePixelRatio || 1;
+    let dprMedia = window.matchMedia(`(resolution: ${currentDpr}dppx)`);
+    const onDprChange = () => {
+      currentDpr = window.devicePixelRatio || 1;
+      dprMedia.removeEventListener('change', onDprChange);
+      dprMedia = window.matchMedia(`(resolution: ${currentDpr}dppx)`);
+      dprMedia.addEventListener('change', onDprChange);
+      apply();
+    };
+    dprMedia.addEventListener('change', onDprChange);
+
+    return () => {
+      ro.disconnect();
+      dprMedia.removeEventListener('change', onDprChange);
+    };
+  }, [ratio]);
+
+  const designWidth = dims.w;
+  const designHeight = dims.h;
+  const scale = 1;
+  const dpr = pixelRatio || 1;
 
   const resetAspectRatio = useCallback(() => setRatio(initialRatio), [initialRatio]);
 
@@ -94,8 +97,9 @@ export function DisplayProvider({
     displayWidth: dims.w,
     displayHeight: dims.h,
     scale,
-    unitX,
-    unitY,
+    unitX: scale,
+    unitY: scale,
+    pixelRatio: dpr,
     setAspectRatio: setRatio,
     resetAspectRatio,
   };

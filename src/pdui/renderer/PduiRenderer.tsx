@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import '../registry/builtins/index.tsx';
 import { defaultRegistry, type ComponentRegistry } from '../registry/ComponentRegistry';
 import type { HandlerRegistry, PduiDocument, PduiNode, RendererRegistry } from '../schema/types';
@@ -8,6 +8,24 @@ export const PduiDataContext = createContext<Record<string, unknown> | null>(nul
 export function usePduiData(): Record<string, unknown> {
   const data = useContext(PduiDataContext);
   return data ?? {};
+}
+
+export interface PduiScriptModule {
+  handlers?: HandlerRegistry;
+  data?: () => Record<string, unknown>;
+  registerWidgets?: (registry: ComponentRegistry) => void;
+}
+
+const scriptCache = new Map<string, Promise<PduiScriptModule>>();
+
+function loadScript(scriptPath: string): Promise<PduiScriptModule> {
+  if (scriptCache.has(scriptPath)) return scriptCache.get(scriptPath)!;
+  const p = import(/* @vite-ignore */ scriptPath).then((m: any) => {
+    if (m.registerWidgets) m.registerWidgets(defaultRegistry);
+    return m as PduiScriptModule;
+  });
+  scriptCache.set(scriptPath, p);
+  return p;
 }
 
 interface RenderNodeProps {
@@ -62,17 +80,39 @@ export interface PduiRendererProps {
 }
 
 export function PduiRenderer({ document, handlers, renderers, registry = defaultRegistry, data }: PduiRendererProps) {
+  const scriptPath = document.meta?.script;
+
+  const [scriptModule, setScriptModule] = useState<PduiScriptModule | null>(null);
+
+  useEffect(() => {
+    if (!scriptPath) { setScriptModule(null); return; }
+    let cancelled = false;
+    loadScript(scriptPath).then(m => { if (!cancelled) setScriptModule(m); });
+    return () => { cancelled = true; };
+  }, [scriptPath]);
+
+  const scriptData = scriptModule?.data?.();
+  const scriptHandlers = scriptModule?.handlers;
+
+  const mergedHandlers: HandlerRegistry | undefined =
+    handlers && scriptHandlers ? { ...scriptHandlers, ...handlers } :
+    handlers ?? scriptHandlers;
+
+  const mergedData: Record<string, unknown> | undefined =
+    data && scriptData ? { ...scriptData, ...data } :
+    data ?? scriptData;
+
   const content = (
     <RenderNode
       node={document.root}
-      handlers={handlers}
+      handlers={mergedHandlers}
       renderers={renderers}
       registry={registry}
     />
   );
 
-  if (data) {
-    return <PduiDataContext.Provider value={data}>{content}</PduiDataContext.Provider>;
+  if (mergedData) {
+    return <PduiDataContext.Provider value={mergedData}>{content}</PduiDataContext.Provider>;
   }
   return content;
 }

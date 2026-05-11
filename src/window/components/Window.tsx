@@ -181,7 +181,7 @@ export function Window({ window: win, loading }: WindowProps) {
 
   const containerStyle: CSSProperties =
     loading
-      ? { position: 'absolute', left: 0, top: 0, zIndex: win.zIndex, boxSizing: 'border-box', willChange: 'transform', visibility: 'hidden', pointerEvents: 'none' }
+      ? { position: 'absolute', left: 0, top: 0, zIndex: win.zIndex, boxSizing: 'border-box', willChange: 'transform', visibility: 'hidden', pointerEvents: 'none', background: '#ffffff', border: '3px solid #ff8ef6', padding: 3, overflow: 'hidden', display: 'flex', flexDirection: 'column' }
       : win.status === 'maximized'
       ? { position: 'absolute', left: 0, top: 0, right: 0, bottom: `calc(42 * var(--vh))`, zIndex: win.zIndex }
       : win.status === 'minimized'
@@ -217,9 +217,11 @@ export function Window({ window: win, loading }: WindowProps) {
         <button className="window-btn window-btn-minimize" aria-label="minimize" onPointerDown={(e) => e.stopPropagation()} onClick={() => minimize(win.id)}>
           <img src="/assets/system/min.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
         </button>
-        <button className="window-btn window-btn-maximize" aria-label="maximize/restore" onPointerDown={(e) => e.stopPropagation()} onClick={() => win.status === 'maximized' ? restore(win.id) : maximize(win.id)}>
-          <img src="/assets/system/full.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
-        </button>
+        {win.resizable && (
+          <button className="window-btn window-btn-maximize" aria-label="maximize/restore" onPointerDown={(e) => e.stopPropagation()} onClick={() => win.status === 'maximized' ? restore(win.id) : maximize(win.id)}>
+            <img src="/assets/system/full.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
+          </button>
+        )}
         {win.closable && (
           <button className="window-btn window-btn-close" aria-label="close" onPointerDown={(e) => e.stopPropagation()} onClick={() => close(win.id)}>
             <img src="/assets/system/exit.svg" alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
