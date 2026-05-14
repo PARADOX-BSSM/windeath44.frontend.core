@@ -111,13 +111,19 @@ export function createWindowStore(): WindowStore {
     },
 
     restore(id: string): void {
-      update(id, { status: 'normal' });
+      state.zCounter++;
+      const w = getWindow(id);
+      state.windows.set(id, { ...w, status: 'normal', zIndex: state.zCounter });
+      state.focusedId = id;
+      notify();
     },
 
     focus(id: string): void {
       state.zCounter++;
-      update(id, { zIndex: state.zCounter });
+      const w = getWindow(id);
+      state.windows.set(id, { ...w, zIndex: state.zCounter });
       state.focusedId = id;
+      notify();
       const navStack = state.navStacks.get(id);
       if (navStack?.current && state.onNavigate) {
         state.onNavigate(navStack.current.path);
