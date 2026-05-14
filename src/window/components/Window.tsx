@@ -49,6 +49,9 @@ export function Window({ window: win, loading }: WindowProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const minW = win.minSize?.width ?? MIN_W;
+  const minH = win.minSize?.height ?? MIN_H;
+
   const dragging = useRef<{
     startX: number; startY: number;
     originX: number; originY: number;
@@ -159,8 +162,8 @@ export function Window({ window: win, loading }: WindowProps) {
       if (r.edge.includes('s')) h += dy;
       if (r.edge.includes('w')) { w -= dx; x = Math.max(0, r.originX + dx); }
       if (r.edge.includes('n')) { h -= dy; y = Math.max(0, r.originY + dy); }
-      w = Math.max(MIN_W, w);
-      h = Math.max(MIN_H, h);
+      w = Math.max(minW, w);
+      h = Math.max(minH, h);
 
       r.x = x; r.y = y; r.w = w; r.h = h;
       containerRef.current.style.transform = `translate(calc(${x} * var(--vw)), calc(${y} * var(--vh)))`;
