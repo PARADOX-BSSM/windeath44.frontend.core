@@ -1,6 +1,6 @@
 {
   "name": "@windeath44/core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Web-based OS architecture library for TypeScript + React",
   "license": "MIT",
   "author": "PARADOX-BSSM",
@@ -8,7 +8,9 @@
     "type": "git",
     "url": "https://github.com/PARADOX-BSSM/windeath44.frontend.core.git"
   },
-  "sideEffects": ["**/builtins/**"],
+  "sideEffects": [
+    "**/builtins/**"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -106,8 +108,12 @@
     "react-dom": ">=18.0.0"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true },
-    "react-dom": { "optional": true }
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.0",
