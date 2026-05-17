@@ -1,13 +1,7 @@
 import type { ComponentType } from 'react';
+import type { PduiDocument } from '../../pdui';
 
-/**
- * PDUi document type (parsed result from PduiParser)
- */
-export interface PduiDocument {
-  version: number;
-  meta?: Record<string, unknown>;
-  root: unknown;
-}
+export type { PduiDocument };
 
 /**
  * View definition - either PDUi-based or component-based
