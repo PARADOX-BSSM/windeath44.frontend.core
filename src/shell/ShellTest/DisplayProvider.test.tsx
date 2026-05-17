@@ -11,25 +11,30 @@ beforeAll(() => {
 });
 
 describe('DisplayProvider', () => {
-  it('provides design dimensions from props', () => {
+  it('provides default aspectRatio', () => {
     function Info() {
-      const { designWidth, designHeight, aspectRatio } = useDisplay();
-      return (
-        <div>
-          <span data-testid="dw">{designWidth}</span>
-          <span data-testid="dh">{designHeight}</span>
-          <span data-testid="ar">{aspectRatio}</span>
-        </div>
-      );
+      const { aspectRatio } = useDisplay();
+      return <span data-testid="ar">{aspectRatio}</span>;
     }
     render(
-      <DisplayProvider designWidth={1280} designHeight={960}>
+      <DisplayProvider>
         <Info />
       </DisplayProvider>,
     );
-    expect(screen.getByTestId('dw').textContent).toBe('1280');
-    expect(screen.getByTestId('dh').textContent).toBe('960');
     expect(Number(screen.getByTestId('ar').textContent)).toBeCloseTo(4 / 3);
+  });
+
+  it('accepts custom aspectRatio prop', () => {
+    function Info() {
+      const { aspectRatio } = useDisplay();
+      return <span data-testid="ar">{aspectRatio}</span>;
+    }
+    render(
+      <DisplayProvider aspectRatio={16 / 9}>
+        <Info />
+      </DisplayProvider>,
+    );
+    expect(Number(screen.getByTestId('ar').textContent)).toBeCloseTo(16 / 9);
   });
 
   it('useDisplay throws outside DisplayProvider', () => {
