@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import '../registry/builtins/index.tsx';
 import { defaultRegistry, type ComponentRegistry } from '../registry/ComponentRegistry';
 import type { HandlerRegistry, PduiDocument, PduiNode, RendererRegistry } from '../schema/types';
