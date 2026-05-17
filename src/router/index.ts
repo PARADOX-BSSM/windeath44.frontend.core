@@ -12,3 +12,18 @@ export type {
   HistoryAdapter,
   RouterMode,
 } from './types';
+
+// ViewManager exports
+export {
+  ViewManagerProvider,
+  useViewManager,
+  defineViews,
+} from './view-manager';
+export type {
+  ViewDefinition,
+  ViewManagerConfig,
+  ViewManagerContextValue,
+  ViewNavigateOptions,
+  ViewManagerFeatureOptions,
+  PduiDocument,
+} from './view-manager';
