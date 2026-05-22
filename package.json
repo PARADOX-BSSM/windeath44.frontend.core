@@ -2,7 +2,7 @@
   "name": "@windeath44/core",
   "version": "0.2.1",
   "description": "Web-based OS architecture library for TypeScript + React",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "author": "PARADOX-BSSM",
   "repository": {
     "type": "git",
