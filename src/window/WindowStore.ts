@@ -13,6 +13,7 @@ export interface WindowStoreState {
   navStacks: Map<string, AppNavStack>;
   focusedId: string | null;
   onNavigate: ((path: string) => void) | null;
+  ownerProcesses: Map<number, Set<string>>;
 }
 
 export interface WindowStore {
@@ -32,6 +33,9 @@ export interface WindowStore {
   goForward(id: string): string | null;
   subscribe(listener: () => void): () => void;
   setOnNavigate(fn: (path: string) => void): void;
+  closeAllByPid(pid: number): void;
+  closeCascade(id: string): void;
+  getSubWindows(parentWindowId: string): WindowState[];
 }
 
 const DEFAULT_SIZE: WindowSize = { width: 480, height: 320 };
@@ -45,6 +49,7 @@ export function createWindowStore(): WindowStore {
     navStacks: new Map(),
     focusedId: null,
     onNavigate: null,
+    ownerProcesses: new Map(),
   };
   const listeners = new Set<() => void>();
 
@@ -64,6 +69,23 @@ export function createWindowStore(): WindowStore {
     notify();
   }
 
+  function closeRecursive(id: string): void {
+    for (const w of state.windows.values()) {
+      if (w.parentWindowId === id) closeRecursive(w.id);
+    }
+    const win = state.windows.get(id);
+    state.windows.delete(id);
+    state.children.delete(id);
+    state.navStacks.delete(id);
+    if (win) {
+      const owned = state.ownerProcesses.get(win.pid);
+      if (owned) {
+        owned.delete(id);
+        if (owned.size === 0) state.ownerProcesses.delete(win.pid);
+      }
+    }
+  }
+
   return {
     getState: () => state,
 
@@ -74,6 +96,7 @@ export function createWindowStore(): WindowStore {
         id,
         pid: options.pid,
         packageId: options.packageId,
+        parentWindowId: options.parentWindowId,
         title: options.title,
         icon: options.icon,
         position: { x: 80 + (state.zCounter % 20) * 20, y: 60 + (state.zCounter % 10) * 20, ...options.initialPosition },
@@ -88,16 +111,32 @@ export function createWindowStore(): WindowStore {
       state.children.set(id, options.children);
       state.navStacks.set(id, new AppNavStack());
       state.focusedId = id;
+
+      let owned = state.ownerProcesses.get(options.pid);
+      if (!owned) {
+        owned = new Set();
+        state.ownerProcesses.set(options.pid, owned);
+      }
+      owned.add(id);
+
       notify();
       return id;
     },
 
     close(id: string): void {
+      const win = state.windows.get(id);
       state.windows.delete(id);
       state.children.delete(id);
       state.navStacks.delete(id);
       if (state.focusedId === id) {
         state.focusedId = null;
+      }
+      if (win) {
+        const owned = state.ownerProcesses.get(win.pid);
+        if (owned) {
+          owned.delete(id);
+          if (owned.size === 0) state.ownerProcesses.delete(win.pid);
+        }
       }
       notify();
     },
@@ -192,6 +231,36 @@ export function createWindowStore(): WindowStore {
 
     setOnNavigate(fn: (path: string) => void): void {
       state.onNavigate = fn;
+    },
+
+    closeAllByPid(pid: number): void {
+      const owned = state.ownerProcesses.get(pid);
+      if (!owned) return;
+      const ids = Array.from(owned);
+      for (const id of ids) {
+        closeRecursive(id);
+      }
+      state.ownerProcesses.delete(pid);
+      if (state.focusedId && !state.windows.has(state.focusedId)) {
+        state.focusedId = null;
+      }
+      notify();
+    },
+
+    closeCascade(id: string): void {
+      closeRecursive(id);
+      if (state.focusedId && !state.windows.has(state.focusedId)) {
+        state.focusedId = null;
+      }
+      notify();
+    },
+
+    getSubWindows(parentWindowId: string): WindowState[] {
+      const result: WindowState[] = [];
+      for (const w of state.windows.values()) {
+        if (w.parentWindowId === parentWindowId) result.push(w);
+      }
+      return result;
     },
   };
 }

@@ -20,6 +20,9 @@ export interface WindowManagerContextValue {
   navigate(id: string, entry: NavStackEntry): void;
   goBack(id: string): string | null;
   goForward(id: string): string | null;
+  closeAllByPid(pid: number): void;
+  closeCascade(id: string): void;
+  getSubWindows(parentWindowId: string): WindowState[];
 }
 
 const WindowManagerContext = createContext<WindowManagerContextValue | null>(null);
@@ -77,6 +80,9 @@ export function WindowManagerProvider({ onNavigate, children }: WindowManagerPro
       navigate: (id, entry) => store.navigate(id, entry),
       goBack: (id) => store.goBack(id),
       goForward: (id) => store.goForward(id),
+      closeAllByPid: (pid) => store.closeAllByPid(pid),
+      closeCascade: (id) => store.closeCascade(id),
+      getSubWindows: (parentId) => store.getSubWindows(parentId),
     }),
     [windows, focusedId, store],
   );

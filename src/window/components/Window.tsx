@@ -2,11 +2,19 @@ import {
   useRef,
   useLayoutEffect,
   useCallback,
+  createContext,
+  useContext,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import type { WindowState } from '../types';
 import { useWindowManager } from '../WindowManagerProvider';
+
+const WindowIdContext = createContext<string | null>(null);
+
+export function useWindowId(): string | null {
+  return useContext(WindowIdContext);
+}
 
 interface WindowProps {
   window: WindowState;
@@ -232,7 +240,11 @@ export function Window({ window: win, loading }: WindowProps) {
         )}
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <WindowIdContext.Provider value={win.id}>
+          {children}
+        </WindowIdContext.Provider>
+      </div>
 
       {win.resizable && win.status === 'normal' && (
         <>
